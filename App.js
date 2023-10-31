@@ -6,8 +6,8 @@
  * @flow strict-local
  */
 
-import React from 'react';
-import { NativeModules } from 'react-native';
+import React, {useState} from 'react';
+import { DeviceEventEmitter, NativeModules, NativeEventEmitter, Platform } from 'react-native';
 import type {Node} from 'react';
 import {
   SafeAreaView,
@@ -42,6 +42,19 @@ const onStopPress = () => {
 };
 
 const App: () => Node = () => {
+  
+  const [statusText, setStatusText] = useState("Stopped");
+
+  if (Platform.OS === 'ios') {
+    const tritonEmitter = new NativeEventEmitter(NativeRNTritonPlayer);
+    tritonEmitter.addListener('stateChanged', (playerState)=> {console.log("The State:" + playerState)});
+  } else {
+    DeviceEventEmitter.addListener('stateChanged', playerState => {
+      console.log("The State:" + JSON.stringify(playerState));
+      setStatusText(playerState.state)
+    });
+  }  
+
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
@@ -62,16 +75,17 @@ const App: () => Node = () => {
          <Button
           onPress={onPlayPress}
           title="Play"
-          color="#841584"
+          color="#186494"
           accessibilityLabel="Play Station"
       />
       <Button
           onPress={onStopPress}
           title="Stop"
-          color="#841584"
+          color="#186494"
           accessibilityLabel="Stop Station"
       />
         </View>
+       <Text>The Player Status: {statusText}</Text>
       </ScrollView>
     </SafeAreaView>
   );
